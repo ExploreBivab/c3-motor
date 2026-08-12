@@ -460,16 +460,16 @@ connectButton.addEventListener(
       // This avoids advertisement filtering problems.
       // ------------------------------------------------------
 
-      bluetoothDevice =
-        await navigator.bluetooth.requestDevice({
+     bluetoothDevice =
+  await navigator.bluetooth.requestDevice({
 
-          acceptAllDevices: true,
+    filters: [
+      {
+        services: [SERVICE_UUID]
+      }
+    ]
 
-          optionalServices: [
-            SERVICE_UUID
-          ]
-
-        });
+  });
 
 
       writeLog(
