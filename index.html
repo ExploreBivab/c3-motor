@@ -1,534 +1,838 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>ESP32 Motor Control</title>
+<meta charset="UTF-8">
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
+<title>ESP32-C3 Motor Control</title>
 
-    .container {
-      width: 100%;
-      max-width: 450px;
-      background: #1f2937;
-      border-radius: 20px;
-      padding: 25px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
 
-    h1 {
-      margin-top: 0;
-      font-size: 26px;
-    }
+<style>
 
-    .status {
-      margin: 20px 0;
-      padding: 15px;
-      background: #111827;
-      border-radius: 12px;
-      font-size: 18px;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    #connectionStatus {
-      font-weight: bold;
-    }
 
-    .disconnected {
-      color: #ef4444;
-    }
+body {
 
-    .connected {
-      color: #22c55e;
-    }
+  margin: 0;
 
-    .motorStatus {
-      margin: 20px 0;
-      font-size: 22px;
-      font-weight: bold;
-    }
+  min-height: 100vh;
 
-    .timer {
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
+  background: #111827;
 
-    button {
-      width: 100%;
-      min-height: 60px;
-      border: none;
-      border-radius: 12px;
-      margin: 8px 0;
-      font-size: 19px;
-      font-weight: bold;
-      color: white;
-      cursor: pointer;
-    }
+  color: white;
 
-    button:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
 
-    #connectButton {
-      background: #2563eb;
-    }
+  display: flex;
 
-    #forwardButton {
-      background: #16a34a;
-    }
+  justify-content: center;
 
-    #reverseButton {
-      background: #f59e0b;
-    }
+  align-items: center;
 
-    #stopButton {
-      background: #dc2626;
-    }
+  padding: 20px;
+}
 
-    button:active {
-      transform: scale(0.98);
-    }
 
-    .info {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-  </style>
+.container {
+
+  width: 100%;
+
+  max-width: 430px;
+
+  background: #1f2937;
+
+  border-radius: 22px;
+
+  padding: 25px;
+
+  text-align: center;
+
+  box-shadow:
+    0 10px 40px
+    rgba(0,0,0,0.4);
+}
+
+
+h1 {
+
+  margin-top: 0;
+
+  font-size: 25px;
+}
+
+
+.statusBox {
+
+  background: #111827;
+
+  border-radius: 12px;
+
+  padding: 15px;
+
+  margin: 20px 0;
+}
+
+
+.statusLabel {
+
+  font-size: 14px;
+
+  color: #9ca3af;
+
+  margin-bottom: 5px;
+}
+
+
+#connectionStatus {
+
+  font-size: 19px;
+
+  font-weight: bold;
+
+  color: #ef4444;
+}
+
+
+.connected {
+
+  color: #22c55e !important;
+}
+
+
+.motorState {
+
+  font-size: 25px;
+
+  font-weight: bold;
+
+  margin-top: 20px;
+}
+
+
+.timer {
+
+  font-size: 18px;
+
+  color: #9ca3af;
+
+  margin: 10px 0 20px;
+}
+
+
+button {
+
+  width: 100%;
+
+  height: 62px;
+
+  margin: 8px 0;
+
+  border: none;
+
+  border-radius: 13px;
+
+  color: white;
+
+  font-size: 19px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+
+button:disabled {
+
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
+
+#connectButton {
+
+  background: #2563eb;
+}
+
+
+#forwardButton {
+
+  background: #16a34a;
+}
+
+
+#reverseButton {
+
+  background: #f59e0b;
+}
+
+
+#stopButton {
+
+  background: #dc2626;
+}
+
+
+.device {
+
+  margin-top: 15px;
+
+  font-size: 14px;
+
+  color: #9ca3af;
+}
+
+
+.log {
+
+  margin-top: 20px;
+
+  padding: 10px;
+
+  background: #111827;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+
+  color: #9ca3af;
+
+  text-align: left;
+
+  min-height: 45px;
+
+  word-break: break-word;
+}
+
+</style>
+
 </head>
+
 
 <body>
 
-  <div class="container">
 
-    <h1>ESP32-C3 Motor Control</h1>
+<div class="container">
 
-    <div class="status">
-      BLE Status:
-      <span id="connectionStatus" class="disconnected">
-        DISCONNECTED
-      </span>
-    </div>
 
-    <button id="connectButton">
-      CONNECT BLE
-    </button>
+<h1>
+ESP32-C3 Motor Control
+</h1>
 
-    <div class="motorStatus" id="motorStatus">
-      STOPPED
-    </div>
 
-    <div class="timer" id="timer">
-      Ready
-    </div>
+<div class="statusBox">
 
-    <button id="forwardButton" disabled>
-      FORWARD
-    </button>
+<div class="statusLabel">
+BLE STATUS
+</div>
 
-    <button id="reverseButton" disabled>
-      REVERSE
-    </button>
+<div id="connectionStatus">
+DISCONNECTED
+</div>
 
-    <button id="stopButton" disabled>
-      STOP
-    </button>
+</div>
 
-    <div class="info">
-      Forward / Reverse runs the motor for 5 seconds.
-      <br>
-      STOP immediately disables the motor.
-    </div>
 
-  </div>
+<button id="connectButton">
+CONNECT BLE
+</button>
+
+
+<div class="device"
+     id="deviceName">
+
+No device connected
+
+</div>
+
+
+<div class="motorState"
+     id="motorState">
+
+STOPPED
+
+</div>
+
+
+<div class="timer"
+     id="timer">
+
+Ready
+
+</div>
+
+
+<button id="forwardButton"
+        disabled>
+
+FORWARD
+
+</button>
+
+
+<button id="reverseButton"
+        disabled>
+
+REVERSE
+
+</button>
+
+
+<button id="stopButton"
+        disabled>
+
+STOP
+
+</button>
+
+
+<div class="log"
+     id="log">
+
+Waiting...
+
+</div>
+
+
+</div>
 
 
 <script>
 
-  // =====================================================
-  // BLE UUIDs
-  // MUST MATCH ESP32-C3 CODE
-  // =====================================================
 
- const SERVICE_UUID =
-    "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+// ============================================================
+// BLE UUIDs
+// MUST MATCH ESP32 CODE
+// ============================================================
+
+const SERVICE_UUID =
+  "7b6e0001-3a21-4f7c-9d11-123456789abc";
+
 
 const CHARACTERISTIC_UUID =
-    "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
+  "7b6e0002-3a21-4f7c-9d11-123456789abc";
 
 
-  // =====================================================
-  // BLE VARIABLES
-  // =====================================================
+// ============================================================
+// VARIABLES
+// ============================================================
 
-  let device = null;
-  let characteristic = null;
+let bluetoothDevice = null;
 
-  let countdownTimer = null;
-  let remainingSeconds = 0;
+let motorCharacteristic = null;
 
+let countdownInterval = null;
 
-  // =====================================================
-  // HTML ELEMENTS
-  // =====================================================
-
-  const connectButton =
-    document.getElementById("connectButton");
-
-  const forwardButton =
-    document.getElementById("forwardButton");
-
-  const reverseButton =
-    document.getElementById("reverseButton");
-
-  const stopButton =
-    document.getElementById("stopButton");
-
-  const connectionStatus =
-    document.getElementById("connectionStatus");
-
-  const motorStatus =
-    document.getElementById("motorStatus");
-
-  const timer =
-    document.getElementById("timer");
+let remainingSeconds = 0;
 
 
-  // =====================================================
-  // CONNECT BLE
-  // =====================================================
+// ============================================================
+// HTML ELEMENTS
+// ============================================================
 
-  connectButton.addEventListener("click", async () => {
+const connectButton =
+  document.getElementById(
+    "connectButton"
+  );
 
-    try {
 
-      if (!navigator.bluetooth) {
+const forwardButton =
+  document.getElementById(
+    "forwardButton"
+  );
 
+
+const reverseButton =
+  document.getElementById(
+    "reverseButton"
+  );
+
+
+const stopButton =
+  document.getElementById(
+    "stopButton"
+  );
+
+
+const connectionStatus =
+  document.getElementById(
+    "connectionStatus"
+  );
+
+
+const motorState =
+  document.getElementById(
+    "motorState"
+  );
+
+
+const timer =
+  document.getElementById(
+    "timer"
+  );
+
+
+const deviceName =
+  document.getElementById(
+    "deviceName"
+  );
+
+
+const log =
+  document.getElementById(
+    "log"
+  );
+
+
+// ============================================================
+// LOG
+// ============================================================
+
+function writeLog(message)
+{
+  console.log(message);
+
+  log.textContent = message;
+}
+
+
+// ============================================================
+// ENABLE / DISABLE MOTOR BUTTONS
+// ============================================================
+
+function setMotorButtons(enabled)
+{
+  forwardButton.disabled = !enabled;
+
+  reverseButton.disabled = !enabled;
+
+  stopButton.disabled = !enabled;
+}
+
+
+// ============================================================
+// CONNECT BLE
+// ============================================================
+
+connectButton.addEventListener(
+  "click",
+  async function()
+  {
+
+    try
+    {
+
+      // Check Web Bluetooth
+      if (!navigator.bluetooth)
+      {
         alert(
-          "Web Bluetooth is not supported by this browser. Use Chrome on Android."
+          "Web Bluetooth is not supported. Use Chrome on Android."
         );
 
         return;
       }
 
 
-      connectionStatus.textContent = "CONNECTING...";
+      writeLog(
+        "Opening Bluetooth device chooser..."
+      );
+
+
+      connectionStatus.textContent =
+        "SCANNING...";
+
       connectionStatus.className = "";
 
 
-      // Ask user to select ESP32
-      device = await navigator.bluetooth.requestDevice({
+      // ------------------------------------------------------
+      // IMPORTANT:
+      // Accept all BLE devices temporarily.
+      // This avoids advertisement filtering problems.
+      // ------------------------------------------------------
 
-        filters: [
-          {
-            name: "ESP32-C3-Motor",
-            services: [SERVICE_UUID]
-          }
-        ]
+      bluetoothDevice =
+        await navigator.bluetooth.requestDevice({
 
-      });
+          acceptAllDevices: true,
+
+          optionalServices: [
+            SERVICE_UUID
+          ]
+
+        });
 
 
-      console.log("Selected device:", device.name);
+      writeLog(
+        "Device selected: " +
+        (bluetoothDevice.name || "Unknown")
+      );
 
 
-      // Detect disconnection
-      device.addEventListener(
+      deviceName.textContent =
+        "Device: " +
+        (bluetoothDevice.name || "Unknown");
+
+
+      // Handle disconnect
+      bluetoothDevice.addEventListener(
         "gattserverdisconnected",
         handleDisconnect
       );
 
 
-      // Connect to GATT server
+      // ------------------------------------------------------
+      // CONNECT GATT
+      // ------------------------------------------------------
+
+      writeLog(
+        "Connecting to ESP32..."
+      );
+
+
       const server =
-        await device.gatt.connect();
+        await bluetoothDevice.gatt.connect();
 
 
-      console.log("GATT connected");
+      writeLog(
+        "Connected. Finding service..."
+      );
 
 
-      // Get BLE service
+      // ------------------------------------------------------
+      // GET SERVICE
+      // ------------------------------------------------------
+
       const service =
         await server.getPrimaryService(
           SERVICE_UUID
         );
 
 
-      // Get writable characteristic
-      characteristic =
+      writeLog(
+        "Service found. Finding characteristic..."
+      );
+
+
+      // ------------------------------------------------------
+      // GET CHARACTERISTIC
+      // ------------------------------------------------------
+
+      motorCharacteristic =
         await service.getCharacteristic(
           CHARACTERISTIC_UUID
         );
 
 
-      // Connected successfully
-      connectionStatus.textContent = "CONNECTED";
-      connectionStatus.className = "connected";
+      // ------------------------------------------------------
+      // SUCCESS
+      // ------------------------------------------------------
 
-      connectButton.textContent = "CONNECTED";
+      connectionStatus.textContent =
+        "CONNECTED";
 
-      forwardButton.disabled = false;
-      reverseButton.disabled = false;
-      stopButton.disabled = false;
-
-      motorStatus.textContent = "STOPPED";
-      timer.textContent = "Ready";
+      connectionStatus.className =
+        "connected";
 
 
-      console.log("BLE connection successful");
+      connectButton.textContent =
+        "CONNECTED";
+
+
+      setMotorButtons(true);
+
+
+      motorState.textContent =
+        "STOPPED";
+
+
+      timer.textContent =
+        "Ready";
+
+
+      writeLog(
+        "BLE connection successful."
+      );
 
     }
 
-    catch (error) {
+    catch(error)
+    {
 
       console.error(error);
+
 
       connectionStatus.textContent =
         "DISCONNECTED";
 
-      connectionStatus.className =
-        "disconnected";
-
-      forwardButton.disabled = true;
-      reverseButton.disabled = true;
-      stopButton.disabled = true;
-
-      alert(
-        "BLE connection failed:\n" +
-        error.message
-      );
-
-    }
-
-  });
+      connectionStatus.className = "";
 
 
-  // =====================================================
-  // SEND BLE COMMAND
-  // =====================================================
-
-  async function sendCommand(command) {
-
-    if (!characteristic) {
-
-      alert("Please connect to ESP32 first.");
-
-      return;
-    }
+      setMotorButtons(false);
 
 
-    try {
-
-      const data =
-        new TextEncoder().encode(command);
-
-
-      await characteristic.writeValue(data);
-
-
-      console.log(
-        "BLE command sent:",
-        command
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "BLE write error:",
-        error
-      );
-
-      alert(
-        "Failed to send command:\n" +
+      writeLog(
+        "ERROR: " +
         error.message
       );
 
     }
 
   }
+);
 
 
-  // =====================================================
-  // FORWARD
-  // =====================================================
+// ============================================================
+// SEND COMMAND
+// ============================================================
 
-  forwardButton.addEventListener(
-    "click",
-    async () => {
+async function sendCommand(command)
+{
 
-      await sendCommand("F");
+  if (!motorCharacteristic)
+  {
 
-      startCountdown("FORWARD");
+    writeLog(
+      "Not connected to ESP32."
+    );
 
-    }
-  );
+    return;
 
-
-  // =====================================================
-  // REVERSE
-  // =====================================================
-
-  reverseButton.addEventListener(
-    "click",
-    async () => {
-
-      await sendCommand("R");
-
-      startCountdown("REVERSE");
-
-    }
-  );
+  }
 
 
-  // =====================================================
-  // STOP
-  // =====================================================
+  try
+  {
 
-  stopButton.addEventListener(
-    "click",
-    async () => {
-
-      await sendCommand("S");
-
-      stopCountdown();
-
-      motorStatus.textContent =
-        "STOPPED";
-
-      timer.textContent =
-        "Stopped manually";
-
-    }
-  );
+    const data =
+      new TextEncoder().encode(
+        command
+      );
 
 
-  // =====================================================
-  // 5 SECOND COUNTDOWN
-  // =====================================================
-
-  function startCountdown(direction) {
-
-    clearInterval(countdownTimer);
+    await motorCharacteristic.writeValue(
+      data
+    );
 
 
-    remainingSeconds = 5;
+    writeLog(
+      "Command sent: " +
+      command
+    );
+
+  }
+
+  catch(error)
+  {
+
+    console.error(error);
 
 
-    motorStatus.textContent =
-      direction;
+    writeLog(
+      "BLE write error: " +
+      error.message
+    );
 
+  }
+
+}
+
+
+// ============================================================
+// FORWARD
+// ============================================================
+
+forwardButton.addEventListener(
+  "click",
+  async function()
+  {
+
+    await sendCommand("F");
+
+    startCountdown(
+      "FORWARD"
+    );
+
+  }
+);
+
+
+// ============================================================
+// REVERSE
+// ============================================================
+
+reverseButton.addEventListener(
+  "click",
+  async function()
+  {
+
+    await sendCommand("R");
+
+    startCountdown(
+      "REVERSE"
+    );
+
+  }
+);
+
+
+// ============================================================
+// STOP
+// ============================================================
+
+stopButton.addEventListener(
+  "click",
+  async function()
+  {
+
+    await sendCommand("S");
+
+    stopCountdown();
+
+    motorState.textContent =
+      "STOPPED";
 
     timer.textContent =
-      remainingSeconds + " seconds";
+      "Stopped manually";
+
+  }
+);
 
 
-    countdownTimer =
-      setInterval(() => {
+// ============================================================
+// COUNTDOWN
+// ============================================================
+
+function startCountdown(direction)
+{
+
+  stopCountdown();
+
+
+  remainingSeconds = 5;
+
+
+  motorState.textContent =
+    direction;
+
+
+  timer.textContent =
+    remainingSeconds +
+    " seconds";
+
+
+  countdownInterval =
+    setInterval(
+      function()
+      {
 
         remainingSeconds--;
 
 
-        if (remainingSeconds <= 0) {
+        if (remainingSeconds <= 0)
+        {
 
-          clearInterval(countdownTimer);
+          stopCountdown();
 
-          countdownTimer = null;
 
-          motorStatus.textContent =
+          motorState.textContent =
             "STOPPED";
+
 
           timer.textContent =
             "Completed";
 
+
           return;
+
         }
 
 
         timer.textContent =
-          remainingSeconds + " seconds";
+          remainingSeconds +
+          " seconds";
 
-      }, 1000);
+      },
+      1000
+    );
 
-  }
-
-
-  // =====================================================
-  // STOP COUNTDOWN
-  // =====================================================
-
-  function stopCountdown() {
-
-    if (countdownTimer) {
-
-      clearInterval(countdownTimer);
-
-      countdownTimer = null;
-
-    }
-
-  }
+}
 
 
-  // =====================================================
-  // BLE DISCONNECTED
-  // =====================================================
+// ============================================================
+// STOP COUNTDOWN
+// ============================================================
 
-  function handleDisconnect() {
+function stopCountdown()
+{
 
-    console.log("BLE disconnected");
+  if (countdownInterval !== null)
+  {
 
+    clearInterval(
+      countdownInterval
+    );
 
-    characteristic = null;
-
-
-    connectionStatus.textContent =
-      "DISCONNECTED";
-
-    connectionStatus.className =
-      "disconnected";
-
-
-    connectButton.textContent =
-      "CONNECT BLE";
-
-
-    forwardButton.disabled = true;
-    reverseButton.disabled = true;
-    stopButton.disabled = true;
-
-
-    stopCountdown();
-
-
-    motorStatus.textContent =
-      "STOPPED";
-
-    timer.textContent =
-      "BLE disconnected";
+    countdownInterval = null;
 
   }
+
+}
+
+
+// ============================================================
+// BLE DISCONNECT
+// ============================================================
+
+function handleDisconnect()
+{
+
+  writeLog(
+    "ESP32 disconnected."
+  );
+
+
+  motorCharacteristic = null;
+
+
+  connectionStatus.textContent =
+    "DISCONNECTED";
+
+
+  connectionStatus.className = "";
+
+
+  connectButton.textContent =
+    "CONNECT BLE";
+
+
+  setMotorButtons(false);
+
+
+  stopCountdown();
+
+
+  motorState.textContent =
+    "STOPPED";
+
+
+  timer.textContent =
+    "BLE disconnected";
+
+}
 
 </script>
 
+
 </body>
+
 </html>
