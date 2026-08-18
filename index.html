@@ -1,45 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>ESP32 Motor BLE Control</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ESP32C3 BLE Motor Control</title>
 
 <style>
 
 body{
-    font-family:Arial;
+    font-family: Arial, sans-serif;
     text-align:center;
+    background:#f4f4f4;
     margin-top:40px;
 }
 
+h1{
+    color:#333;
+}
+
 button{
-    width:200px;
+    width:220px;
     height:70px;
-    font-size:20px;
     margin:10px;
     border:none;
     border-radius:10px;
+    font-size:20px;
+    color:white;
     cursor:pointer;
 }
 
 .connect{
     background:#3498db;
-    color:white;
 }
 
 .forward{
     background:#2ecc71;
-    color:white;
 }
 
 .reverse{
     background:#f39c12;
-    color:white;
 }
 
 .stop{
     background:#e74c3c;
-    color:white;
+}
+
+#status{
+    margin-top:20px;
+    font-size:18px;
+    font-weight:bold;
 }
 
 </style>
@@ -55,40 +65,37 @@ Connect ESP32
 
 <br><br>
 
-<button class="forward"
-onclick="sendCmd('F')">
+<button class="forward" onclick="sendCommand('F')">
 Forward
 </button>
 
-<button class="reverse"
-onclick="sendCmd('R')">
+<button class="reverse" onclick="sendCommand('R')">
 Reverse
 </button>
 
-<br><br>
+<br>
 
-<button class="forward"
-onclick="sendCmd('F5')">
+<button class="forward" onclick="sendCommand('F5')">
 Forward 5 Seconds
 </button>
 
-<button class="reverse"
-onclick="sendCmd('R5')">
+<button class="reverse" onclick="sendCommand('R5')">
 Reverse 5 Seconds
 </button>
 
-<br><br>
+<br>
 
-<button class="stop"
-onclick="sendCmd('S')">
+<button class="stop" onclick="sendCommand('S')">
 STOP
 </button>
 
-<h3 id="status">Disconnected</h3>
+<div id="status">
+Disconnected
+</div>
 
 <script>
 
-let characteristic;
+let characteristic = null;
 
 const SERVICE_UUID =
 "12345678-1234-1234-1234-123456789abc";
@@ -100,12 +107,17 @@ async function connectBLE(){
 
     try{
 
+        document.getElementById("status").innerHTML =
+        "Scanning...";
+
         const device =
         await navigator.bluetooth.requestDevice({
-            filters: [{
-                services:[SERVICE_UUID]
-            }]
+            acceptAllDevices: true,
+            optionalServices: [SERVICE_UUID]
         });
+
+        document.getElementById("status").innerHTML =
+        "Connecting to " + device.name;
 
         const server =
         await device.gatt.connect();
@@ -121,31 +133,34 @@ async function connectBLE(){
         );
 
         document.getElementById("status").innerHTML =
-        "✅ Connected to " + device.name;
+        "✅ Connected : " + device.name;
+
+        console.log("Connected");
 
     }
+    catch(error){
 
-    catch(err){
-        alert("Connection Failed");
-        console.log(err);
+        console.error(error);
+
+        document.getElementById("status").innerHTML =
+        "❌ " + error.message;
+
+        alert(error.message);
     }
 }
 
-async function sendCmd(cmd){
+async function sendCommand(cmd){
 
     if(!characteristic){
+
         alert("Connect ESP32 first");
         return;
     }
 
-    const encoder = new TextEncoder();
+    try{
 
-    await characteristic.writeValue(
-        encoder.encode(cmd)
-    );
-}
+        let encoder = new TextEncoder();
 
-</script>
-
-</body>
-</html>
+        await characteristic.writeValue(
+            encoder.encode(cmd)
+ 
