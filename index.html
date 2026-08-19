@@ -1,61 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>ESP32C3 BLE Motor Control</title>
+<title>ESP32-C3 BLE Motor Control</title>
 
 <style>
-
-body{
-    font-family:Arial,sans-serif;
-    text-align:center;
-    background:#f4f4f4;
-    margin-top:40px;
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f4f4f4;
+    margin: 40px;
 }
 
-h1{
-    color:#333;
+h1 {
+    color: #333;
 }
 
-button{
-    width:220px;
-    height:70px;
-    margin:10px;
-    border:none;
-    border-radius:10px;
-    font-size:20px;
-    color:white;
-    cursor:pointer;
+button {
+    width: 220px;
+    height: 70px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
 }
 
-.connect{
-    background:#3498db;
+.connect {
+    background: #3498db;
 }
 
-.forward{
-    background:#2ecc71;
+.forward {
+    background: #2ecc71;
 }
 
-.reverse{
-    background:#f39c12;
+.reverse {
+    background: #f39c12;
 }
 
-.stop{
-    background:#e74c3c;
+.stop {
+    background: #e74c3c;
 }
 
-#status{
-    margin-top:20px;
-    font-size:18px;
-    font-weight:bold;
+#status {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
 }
-
 </style>
 
 </head>
@@ -64,44 +59,38 @@ button{
 
 <h1>ESP32 BLE Motor Control</h1>
 
-<button class="connect"
-onclick="connectBLE()">
-Connect ESP32
+<button class="connect" id="connectBtn">
+    Connect ESP32
 </button>
 
 <br><br>
 
-<button class="forward"
-onclick="sendCommand('F')">
-Forward
+<button class="forward" id="forwardBtn">
+    Forward
 </button>
 
-<button class="reverse"
-onclick="sendCommand('R')">
-Reverse
-</button>
-
-<br>
-
-<button class="forward"
-onclick="sendCommand('F5')">
-Forward 5 Seconds
-</button>
-
-<button class="reverse"
-onclick="sendCommand('R5')">
-Reverse 5 Seconds
+<button class="reverse" id="reverseBtn">
+    Reverse
 </button>
 
 <br>
 
-<button class="stop"
-onclick="sendCommand('S')">
-STOP
+<button class="forward" id="forward5Btn">
+    Forward 5 Seconds
+</button>
+
+<button class="reverse" id="reverse5Btn">
+    Reverse 5 Seconds
+</button>
+
+<br>
+
+<button class="stop" id="stopBtn">
+    STOP
 </button>
 
 <div id="status">
-Disconnected
+    Disconnected
 </div>
 
 <script>
@@ -109,70 +98,67 @@ Disconnected
 let characteristic = null;
 
 const SERVICE_UUID =
-"12345678-1234-1234-1234-123456789abc";
+    "12345678-1234-1234-1234-123456789abc";
 
 const CHARACTERISTIC_UUID =
-"87654321-4321-4321-4321-cba987654321";
+    "87654321-4321-4321-4321-cba987654321";
 
-async function connectBLE(){
+const statusDiv =
+    document.getElementById("status");
 
-    if(!navigator.bluetooth){
+async function connectBLE() {
 
-        alert(
-            "Web Bluetooth is not supported in this browser."
-        );
+    if (!navigator.bluetooth) {
+
+        alert("Web Bluetooth is not supported.");
 
         return;
     }
 
-    try{
+    try {
 
-        document.getElementById("status").innerHTML =
-        "Searching for ESP32...";
+        statusDiv.textContent =
+            "Select your ESP32 device...";
 
         const device =
-        await navigator.bluetooth.requestDevice({
+            await navigator.bluetooth.requestDevice({
 
-            filters:[
-                {
-                    name:"ESP32C3_MOTOR"
-                }
-            ],
+                acceptAllDevices: true,
 
-            optionalServices:[
-                SERVICE_UUID
-            ]
+                optionalServices: [
+                    SERVICE_UUID
+                ]
 
-        });
+            });
 
-        document.getElementById("status").innerHTML =
-        "Connecting...";
+        statusDiv.textContent =
+            "Connecting...";
 
         const server =
-        await device.gatt.connect();
+            await device.gatt.connect();
 
         const service =
-        await server.getPrimaryService(
-            SERVICE_UUID
-        );
+            await server.getPrimaryService(
+                SERVICE_UUID
+            );
 
         characteristic =
-        await service.getCharacteristic(
-            CHARACTERISTIC_UUID
-        );
+            await service.getCharacteristic(
+                CHARACTERISTIC_UUID
+            );
 
-        document.getElementById("status").innerHTML =
-        "Connected to "
-        + (device.name || "ESP32");
+        statusDiv.textContent =
+            "Connected: " +
+            (device.name || "ESP32");
 
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(error);
 
-        document.getElementById("status").innerHTML =
-        "Connection failed";
+        statusDiv.textContent =
+            "Connection failed";
 
         alert(error.message);
 
@@ -180,33 +166,31 @@ async function connectBLE(){
 
 }
 
-async function sendCommand(cmd){
+async function sendCommand(command) {
 
-    if(!characteristic){
+    if (!characteristic) {
 
-        alert(
-            "Connect ESP32 first"
-        );
+        alert("Connect ESP32 first.");
 
         return;
     }
 
-    try{
+    try {
 
         const encoder =
-        new TextEncoder();
+            new TextEncoder();
 
-        await characteristic.writeValue(
-            encoder.encode(cmd)
-        );
+        const data =
+            encoder.encode(command);
 
-        document.getElementById("status").innerHTML =
-        "Command sent: "
-        + cmd;
+        await characteristic.writeValue(data);
+
+        statusDiv.textContent =
+            "Command sent: " + command;
 
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(error);
 
@@ -215,9 +199,31 @@ async function sendCommand(cmd){
     }
 
 }
+
+document.getElementById("connectBtn")
+    .addEventListener("click", connectBLE);
+
+document.getElementById("forwardBtn")
+    .addEventListener("click",
+        () => sendCommand("F"));
+
+document.getElementById("reverseBtn")
+    .addEventListener("click",
+        () => sendCommand("R"));
+
+document.getElementById("forward5Btn")
+    .addEventListener("click",
+        () => sendCommand("F5"));
+
+document.getElementById("reverse5Btn")
+    .addEventListener("click",
+        () => sendCommand("R5"));
+
+document.getElementById("stopBtn")
+    .addEventListener("click",
+        () => sendCommand("S"));
 
 </script>
 
 </body>
-
 </html>
