@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>ESP32C3 BLE Motor Control</title>
 
 <style>
 
 body{
-    font-family: Arial, sans-serif;
+    font-family:Arial,sans-serif;
     text-align:center;
     background:#f4f4f4;
     margin-top:40px;
@@ -53,39 +57,46 @@ button{
 }
 
 </style>
+
 </head>
 
 <body>
 
 <h1>ESP32 BLE Motor Control</h1>
 
-<button class="connect" onclick="connectBLE()">
+<button class="connect"
+onclick="connectBLE()">
 Connect ESP32
 </button>
 
 <br><br>
 
-<button class="forward" onclick="sendCommand('F')">
+<button class="forward"
+onclick="sendCommand('F')">
 Forward
 </button>
 
-<button class="reverse" onclick="sendCommand('R')">
+<button class="reverse"
+onclick="sendCommand('R')">
 Reverse
 </button>
 
 <br>
 
-<button class="forward" onclick="sendCommand('F5')">
+<button class="forward"
+onclick="sendCommand('F5')">
 Forward 5 Seconds
 </button>
 
-<button class="reverse" onclick="sendCommand('R5')">
+<button class="reverse"
+onclick="sendCommand('R5')">
 Reverse 5 Seconds
 </button>
 
 <br>
 
-<button class="stop" onclick="sendCommand('S')">
+<button class="stop"
+onclick="sendCommand('S')">
 STOP
 </button>
 
@@ -105,19 +116,37 @@ const CHARACTERISTIC_UUID =
 
 async function connectBLE(){
 
+    if(!navigator.bluetooth){
+
+        alert(
+            "Web Bluetooth is not supported in this browser."
+        );
+
+        return;
+    }
+
     try{
 
         document.getElementById("status").innerHTML =
-        "Scanning...";
+        "Searching for ESP32...";
 
         const device =
         await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: [SERVICE_UUID]
+
+            filters:[
+                {
+                    name:"ESP32C3_MOTOR"
+                }
+            ],
+
+            optionalServices:[
+                SERVICE_UUID
+            ]
+
         });
 
         document.getElementById("status").innerHTML =
-        "Connecting to " + device.name;
+        "Connecting...";
 
         const server =
         await device.gatt.connect();
@@ -133,34 +162,62 @@ async function connectBLE(){
         );
 
         document.getElementById("status").innerHTML =
-        "✅ Connected : " + device.name;
-
-        console.log("Connected");
+        "Connected to "
+        + (device.name || "ESP32");
 
     }
+
     catch(error){
 
         console.error(error);
 
         document.getElementById("status").innerHTML =
-        "❌ " + error.message;
+        "Connection failed";
 
         alert(error.message);
+
     }
+
 }
 
 async function sendCommand(cmd){
 
     if(!characteristic){
 
-        alert("Connect ESP32 first");
+        alert(
+            "Connect ESP32 first"
+        );
+
         return;
     }
 
     try{
 
-        let encoder = new TextEncoder();
+        const encoder =
+        new TextEncoder();
 
         await characteristic.writeValue(
             encoder.encode(cmd)
- 
+        );
+
+        document.getElementById("status").innerHTML =
+        "Command sent: "
+        + cmd;
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        alert(error.message);
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
